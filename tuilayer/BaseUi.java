@@ -1,0 +1,741 @@
+package tuilayer;
+import java.util.Scanner;
+import java.lang.StringBuilder;
+import java.util.Date;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.ArrayList;
+import java.util.List;
+
+import modellayer.*;
+
+/**
+ * Abstract class baseUi - write a description of the class here
+ *
+ * @author (your name here)
+ * @version (version number or date here)
+ */
+public abstract class BaseUi<T>
+{
+    private Scanner keyboard;
+    private SimpleDateFormat dateFormat;
+    private Date today;
+
+    protected BaseUi()
+    {
+        keyboard = new Scanner(System.in);
+        dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        today = Calendar.getInstance().getTime();
+    }
+
+    protected Scanner getKeyboard() { return keyboard; }
+    protected SimpleDateFormat getDateFormat() { return dateFormat; }
+    protected Date getToday() { return today; }
+
+    protected void println(String line)
+    {
+        System.out.println(line);
+    }
+
+    protected void print(String line)
+    {
+        System.out.print(line);
+    }
+
+    /**
+     * Waits for user to press ENTER and then continues
+     */
+    protected void pressEnter()
+    {
+        println("Tryk enter for at fortsætte");
+        keyboard.nextLine();
+    }
+
+    /**
+     * Asks user for a string and returns it.
+     * @param inputName     User-friendly name of the input (gets printed).
+     * @return              String that user input.
+     */
+    protected String askForString(String inputName)
+    {
+        printAskFor(inputName);
+        return getRequiredString();
+    }
+
+    /**
+     * Asks user for a number and returns it.
+     * @param inputName     User-friendly name of the input (gets printed).
+     * @return              Int that user input.
+     */
+    protected int askForInt(String inputName)
+    {
+        printAskFor(inputName);
+        return getRequiredInt();
+    }
+
+    /**
+     * Asks user for a number and returns it as a double.
+     * @param inputName     User-friendly name of the input (gets printed).
+     * @return              Double that user input.
+     */
+    protected double askForDouble(String inputName)
+    {
+        printAskFor(inputName);
+        return getRequiredDouble();
+    }
+    
+    /**
+     * Asks user for a yes or no (y/n) and returns a boolean.
+     * @param inputName     User-friendly name of the input (gets printed).
+     * @return              Boolean that the user chose.
+     */
+    protected boolean askForBoolean(String inputName)
+    {
+        printAskFor(inputName + " (y/n)");
+        return getRequiredBoolean();
+    }
+    
+    /**
+     * Asks user for a confirmation (y/n).
+     * @param inputName     User-friendly name of the input (gets printed).
+     * @return              Boolean that the user chose.
+     */
+    protected boolean askForConfirmation(String message)
+    {
+        print(message + " (y/n): ");
+        return getRequiredBoolean();
+    }
+
+    /**
+     * Asks user for a Date in format yyyy-MM-dd and returns it.
+     * @param inputName     User-friendly name of the input (gets printed).
+     * @return              Date that user input.
+     */
+    protected Date askForDate(String inputName)
+    {
+        printAskFor(inputName + " (YYYY-MM-DD)");
+        return getRequiredDate();
+    }
+
+    /**
+     * Asks user to choose from an array of enum-values and returns it.
+     * @param inputName     User-friendly name of the input (gets printed).
+     * @param eValues       Enum values in an array.
+     * @return              Enum-result that user chose.
+     */
+    protected <T extends Enum<T>> T askForEnum(String inputName, T[] eValues)
+    {
+        T result = null;
+        
+        while (result == null)
+        {
+            for (int i = 1; i <= eValues.length; i++)
+            {
+                String whiteSpace = i < 10 ? generateWhiteSpaces(4) : generateWhiteSpaces(3);
+                println(i + whiteSpace + eValues[i-1]);
+            }
+
+            printAskFor(inputName + " (1-" + eValues.length + ")");
+
+            String line = keyboard.nextLine();
+
+            if (isInt(line))
+            {
+                int chosenOption = Integer.parseInt(line);
+                if (chosenOption > 0 && chosenOption <= eValues.length)
+                    result = eValues[chosenOption-1];
+            }
+
+            if (result == null)
+                println("Ikke en valid mulighed!");
+        }
+
+        return result;
+    }
+
+    /**
+     * Asks user to choose from an object from a List and returns it.
+     * @param inputName     User-friendly name of the input (gets printed).
+     * @param list          List with objects E.
+     * @return              Object E that the user chose from the list.
+     */
+    protected <E> E askForListObject(String inputName, List<E> list)
+    {
+        E result = null;
+        
+        while (result == null)
+        {
+            for (int i = 1; i <= list.size(); i++)
+            {
+                String whiteSpace = i < 10 ? generateWhiteSpaces(4) : generateWhiteSpaces(3);
+                println(i + whiteSpace + list.get(i-1));
+            }
+    
+            printAskFor(inputName + " (1-" + list.size() + ")");
+            
+            int chosenOption = getRequiredInt();
+            
+            if (chosenOption > 0 && chosenOption <= list.size())
+                result = list.get(chosenOption-1);
+            
+            if (result == null)
+                println("Ikke en valid mulighed!");
+        }
+    
+        return result;
+    }
+    
+    /**
+     * Asks user for a string and returns it. If user presses ENTER without entering anything, a default String gets returned.
+     * @param inputName     User-friendly name of the input (gets printed).
+     * @param defaultString A String that gets returned if user presses ENTER without writing anything.
+     * @return              Either String that user input or defaultString.
+     */
+    protected String askForStringWithDefault(String inputName, String defaultString)
+    {
+        printAskForWithDefault(inputName, defaultString);
+        return getString(defaultString);
+    }
+
+    /**
+     * Asks user for a number and returns it. If user presses ENTER without entering anything, a default int gets returned.
+     * @param inputName     User-friendly name of the input (gets printed).
+     * @param defaultInt    An int that gets returned if user presses ENTER without writing anything.
+     * @return              Either int that user input or defaultInt.
+     */
+    protected int askForIntWithDefault(String inputName, int defaultInt)
+    {
+        printAskForWithDefault(inputName, defaultInt);
+        return getInt(defaultInt);
+    }
+
+    /**
+     * Asks user for a number and returns it as a double. If user presses ENTER without entering anything, a default double gets returned.
+     * @param inputName     User-friendly name of the input (gets printed).
+     * @param defaultDouble A double that gets returned if user presses ENTER without writing anything.
+     * @return              Either double that user input or defaultDouble.
+     */
+    protected double askForDoubleWithDefault(String inputName, double defaultDouble)
+    {
+        printAskForWithDefault(inputName, defaultDouble);
+        return getDouble(defaultDouble);
+    }
+    
+    /**
+     * Asks user for either yes or no (y/n) and returns it as a boolean. If user presses ENTER without entering anything, a default boolean gets returned.
+     * @param inputName         User-friendly name of the input (gets printed).
+     * @param defaultBoolean    A boolean that gets returned if user presses ENTER without writing anything.
+     * @return                  Either boolean that user input or defaultBoolean.
+     */
+    protected boolean askForBooleanWithDefault(String inputName, boolean defaultBoolean)
+    {
+        printAskForWithDefault(inputName + " (y/n)", defaultBoolean);
+        return getBoolean(defaultBoolean);
+    }
+
+    /**
+     * Asks user for a Date in format yyyy-MM-dd and returns it. If user presses ENTER without entering anything, a default Date gets returned.
+     * @param inputName     User-friendly name of the input (gets printed).
+     * @param defaultDate   A Date that gets returned if user presses ENTER without writing anything.
+     * @return              Either Date that user input or defaultDate.
+     */
+    protected Date askForDateWithDefault(String inputName, Date defaultDate)
+    {
+        printAskForWithDefault(inputName + " (YYYY-MM-DD)", dateFormat.format(defaultDate));
+        return getDate(defaultDate);
+    }
+
+    /**
+     * Asks user to choose from an array of enum-values and returns it.
+     * If user presses ENTER without entering anything, a default enum-value gets returned.
+     * @param inputName     User-friendly name of the input (gets printed).
+     * @param eValues       Enum values in an array.
+     * @param defaultEnum   An enum-value that gets returned if user presses ENTER without writing anything.
+     * @return              Enum-result that user chose or defaultEnum.
+     */
+    protected <T extends Enum<T>> T askForEnumWithDefault(String inputName, T[] eValues, T defaultEnum)
+    {
+        T result = null;
+
+        while(result != null)
+        {
+            for (int i = 1; i <= eValues.length; i++)
+            {
+                String whiteSpace = i < 10 ? generateWhiteSpaces(4) : generateWhiteSpaces(3);
+                println(i + whiteSpace + eValues[i-1]);
+            }
+
+            printAskForWithDefault(inputName + " (1-" + eValues.length + ")", defaultEnum);
+
+            String line = keyboard.nextLine();
+
+            if (line.length() == 0)
+                result = defaultEnum;
+            else if (isInt(line))
+            {
+                int chosenOption = Integer.parseInt(line);
+                if (chosenOption > 0 && chosenOption <= eValues.length)
+                    result = eValues[chosenOption-1];
+            }
+
+            if (result == null)
+                println("Not valid input!");
+        }
+
+        return result;
+    }
+    
+    /**
+     * Asks user to choose from an object from a List and returns it.
+     * @param inputName     User-friendly name of the input (gets printed).
+     * @param list          List with objects E.
+     * @param defaultObject Object E that gets returned if user presses ENTER without writing anything.
+     * @return              Object E that the user chose from the list.
+     */
+    protected <E> E askForListObjectWithDefault(String inputName, List<E> list, E defaultObject)
+    {
+        E result = null;
+        
+        while (result == null)
+        {
+            for (int i = 1; i <= list.size(); i++)
+            {
+                String whiteSpace = i < 10 ? generateWhiteSpaces(4) : generateWhiteSpaces(3);
+                println(i + whiteSpace + list.get(i-1));
+            }
+
+            printAskForWithDefault(inputName + " (1-" + list.size() + ")", defaultObject);
+            
+            String line = keyboard.nextLine();
+            
+            if (line.length() == 0)
+                result = defaultObject;
+            else if (isInt(line))
+            {
+                int chosenOption = Integer.parseInt(line);
+                if (chosenOption > 0 && chosenOption <= list.size())
+                    result = list.get(chosenOption-1);
+            }
+            
+            if (result == null)
+                println("Ikke en valid mulighed!");
+        }
+        
+        return result;
+    }
+
+    /**
+     * Prints "Input @inputName: ".
+     * @param inputName     User-friendly name of the input (gets printed).
+     */
+    private void printAskFor(String inputName)
+    {
+        print("Indtast " + inputName + ": ");
+    }
+
+    /**
+     * Prints "Input @inputName [@defaultString]: ".
+     * @param inputName     User-friendly name of the input (gets printed).
+     * @param defaultString A value that gets printed and should be interpreted as a default choice.
+     */
+    private void printAskForWithDefault(String inputName, Object defaultString)
+    {
+        print("Indtast " + inputName + " [" + defaultString + "]: ");
+    }
+
+    private String getString(String defaultString)
+    {
+        String line = keyboard.nextLine();
+        if (line.length() == 0)
+            line = defaultString;
+
+        return line;
+    }
+
+    /**
+     * Gets a number from the user. If user doesn't input a number, it will ask again. If user inputs an empty line (length == 0), a default number will get returned.
+     * @param defaultInt    The default number to return if user inputs an empty line.
+     * @return              Either int that user entered or defaultInt.
+     */
+    private int getInt(int defaultInt)
+    {
+        int result = defaultInt;
+        boolean validInput = false;
+
+        while (!validInput)
+        {
+            String line = keyboard.nextLine();
+            if (line.length() > 0)
+            {
+                if (isInt(line))
+                {
+                    result = Integer.parseInt(line);
+                    validInput = true;
+                }
+                else
+                {
+                    println("Du skal skrive et tal!");
+                    printAskForWithDefault("tal", defaultInt);
+                }
+            }
+            else
+                validInput = true;
+        }
+
+        return result;
+    }
+    
+    private boolean isInt(String s)
+    {
+        boolean result = false;
+        
+        if (s.matches("^\\d+$"))
+        {
+            try
+            {
+                Integer.parseInt(s);
+                result = true;
+            }
+            catch (Exception e)
+            { }
+        }
+        
+        return result;
+    }
+
+    /**
+     * Gets a number from the user and returns it as a double. If user doesn't input a number, it will ask again. If user inputs an empty line (length == 0), a default double will get returned.
+     * @param defaultDouble The default double to return if user inputs an empty line.
+     * @return              Either double that user entered or defaultDouble.
+     */
+    private double getDouble(double defaultDouble)
+    {
+        boolean validInput = false;
+        double result = defaultDouble;
+
+        while (!validInput)
+        {
+            String line = keyboard.nextLine();
+            if (line.length() > 0)
+            {
+                try
+                {
+                    result = Double.parseDouble(line);
+                    validInput = true;
+                }
+                catch (NumberFormatException ex)
+                {
+                    println("Du skal indtaste en valid værdi!");
+                    printAskForWithDefault("værdi", defaultDouble);
+                }
+            }
+            else
+                validInput = true;
+        }
+
+        return result;
+    }
+
+
+    private boolean getBoolean(boolean defaultBoolean)
+    {
+        boolean validInput = false;
+        boolean result = defaultBoolean;
+
+        while (!validInput)
+        {
+            String line = keyboard.nextLine().toLowerCase();
+            switch(line)
+            {
+                case "":
+                    result = defaultBoolean;
+                    validInput = true;
+                    break;
+                case "y":
+                    result = true;
+                    validInput = true;
+                    break;
+                case "n":
+                    result = false;
+                    validInput = true;
+                    break;
+                default:
+                    println("Ikke en valid mulighed!");
+                    break;
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Gets a Date from the user in format yyyy-MM-dd and returns it. If user doesn't input a Date, it will ask again. If user inputs an empty line (length == 0), a default Date will get returned.
+     * @param defaultDate   The default Date to return if user inputs an empty line.
+     * @return              Either Date that user entered or defaultDate.
+     */
+    private Date getDate(Date defaultDate)
+    {
+        boolean validInput = false;
+        Date result = defaultDate;
+
+        while (!validInput)
+        {
+            String line = keyboard.nextLine();
+            if (line.length() > 0)
+            {
+                try
+                {
+                    result = dateFormat.parse(line);
+                    validInput = true;
+                }
+                catch (ParseException ex)
+                {
+                    println("Du skal indtaste en valid dato: YYYY-MM-DD");
+                    printAskForWithDefault("dato", dateFormat.format(defaultDate));
+                }
+            }
+            else
+                validInput = true;
+        }
+
+        return result;
+    }
+    
+    /**
+     * Gets a String from the user. If user doesn't input anything, user will get asked again.
+     * @return              String that user entered.
+     */
+    protected String getRequiredString()
+    {
+        String line = keyboard.nextLine();
+        while (line.length() == 0)
+        {
+            println("Du skal indtaste noget tekst!");
+            line = keyboard.nextLine();
+        }
+
+        return line;
+    }
+    
+    /**
+     * Gets an int from the user. If user doesn't input an int, the user will get asked again.
+     * @return              Int that user entered.
+     */
+    protected int getRequiredInt()
+    {
+        int result = 0;
+        boolean validInput = false;
+
+        while (!validInput)
+        {
+            String line = keyboard.nextLine();
+            
+            if (isInt(line))
+            {
+                result = Integer.parseInt(line);
+                validInput = true;
+            }
+            else
+                println("Du skal indtaste et tal!");
+        }
+
+        return result;
+    }
+    
+    private double getRequiredDouble()
+    {
+        double result = 0;
+        boolean validInput = false;
+
+        while (!validInput)
+        {
+            if (keyboard.hasNextDouble())
+            {
+                result = keyboard.nextDouble();
+                validInput = true;
+            }
+            else
+                println("Du skal indtaste et tal!");
+
+            keyboard.nextLine();
+        }
+
+        return result;
+    }
+
+    private boolean getRequiredBoolean()
+    {
+        boolean result = false;
+        boolean validInput = false;
+
+        while (!validInput)
+        {
+            switch (keyboard.nextLine().toLowerCase())
+            {
+                case "y":
+                    result = true;
+                    validInput = true;
+                    break;
+                case "n":
+                    result = false;
+                    validInput = true;
+                    break;
+                default:
+                    println("Du skal indtaste en valid mulighed (y/n)!");
+                    break;
+            }
+        }
+
+        return result;
+    }
+
+    private Date getRequiredDate()
+    {
+        Date result = new Date();
+
+        boolean validInput = false;
+
+        while (!validInput)
+        {
+            try
+            {
+                result = dateFormat.parse(keyboard.nextLine());
+                validInput = true;
+            }
+            catch (ParseException pe)
+            {
+                println("Du skal indtaste en valid dato: YYYY-MM-DD");
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Prints a titled menu, with options and returns the chosen option (1-*). If goBackText is defined it will get option 0.
+     * @param title         Title of the menu (gets printed).
+     * @param options       All options in the menu
+     * @param goBackText    If not null, it will be printed at the bottom and get option 0.
+     * @return              Returns the chosen option as an int.
+     */
+    protected int printTitledMenu(String title, String[] options, String goBackText)
+    {
+        return printTitledMenu(title, options, goBackText, null);
+    }
+
+    /**
+     * Prints a titled menu, with options and returns the chosen option (1-*). If goBackText is defined it will get option 0.
+     * @param title         Title of the menu (gets printed).
+     * @param options       All options in the menu
+     * @param goBackText    If not null, it will be printed at the bottom and get option 0.
+     * @param printAlso     An object to print under the menu. Can be null (nothing gets printed).
+     * @return              Returns the chosen option as an int.
+     */
+    protected int printTitledMenu(String title, String[] options, String goBackText, T printAlso)
+    {
+        clearScr();
+        println("---");
+        println(title);
+        println("---");
+        return printMenu(options, goBackText, printAlso);
+    }
+
+    /**
+     * Prints a menu with options and returns the chosen option (1-*).
+     * @param options       All options in the menu
+     * @return              Returns the chosen option as an int.
+     */
+    protected int printMenu(String[] options)
+    {
+        return printMenu(options, null, null);
+    }
+
+    /**
+     * Prints a menu with options and returns the chosen option (1-*). If goBackText is defined it will get option 0.
+     * @param title         Title of the menu (gets printed).
+     * @param options       All options in the menu
+     * @param goBackText    If not null, it will be printed at the bottom and get option 0.
+     * @param printAlso     An object to print under the menu. Can be null (nothing gets printed).
+     * @return              Returns the chosen option as an int.
+     */
+    protected int printMenu(String[] options, String goBackText, T printAlso)
+    {
+        int input = 0;
+        boolean validInput = false;
+
+        int allowedLowerInput = goBackText == null ? 1 : 0;
+
+        for (int i = 1; i <= options.length; i++)
+        {
+            String whiteSpace = i < 10 ? generateWhiteSpaces(4) : generateWhiteSpaces(3);
+            println(i + whiteSpace + options[i-1]);
+        }
+
+        if (goBackText != null)
+            println("0    " + goBackText);
+
+        if (printAlso != null)
+        {
+            println("---");
+            printInfo(printAlso);
+        }
+
+        while (!validInput)
+        {
+            if (keyboard.hasNextInt())
+            {
+                input = keyboard.nextInt();
+                validInput = input >= allowedLowerInput && input <= options.length;
+            }
+
+            keyboard.nextLine();
+
+            if (!validInput)
+                println("Ikke en valid mulighed!");
+        }
+
+        return input;
+    }
+
+    /**
+     * Generates a number of whitespaces and returns them as a String.
+     * @param length    Number of whitespaces.
+     * @return          String with defined number of whitespaces.
+     */
+    protected String generateWhiteSpaces(int length)
+    {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < length; i++)
+            builder.append(" ");
+        return builder.toString();
+    }
+
+    /**
+     * Prints all out from the input collection and awaits user to press ENTER.
+     * @param collection    The collection to print out.
+     */
+    protected void printAllShort(ArrayList<T> collection)
+    {
+        if (collection.size() == 0)
+            println("Ingen objekter fundet!");
+        else
+            for(T object : collection)
+                println(object.toString());
+        
+        pressEnter();
+    }
+
+    /**
+     * Clears the screen.
+     */
+    protected void clearScr()
+    {
+        print("\u000C");
+    }
+
+    /**
+     * Abstract method to print info about an object.
+     */
+    protected abstract void printInfo(T object);
+}

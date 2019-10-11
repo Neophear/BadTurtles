@@ -1,0 +1,77 @@
+package modellayer;
+import java.util.Iterator;
+
+/**
+ * Class EmployeeContainer used to contain all of the employees.
+ *
+ * @Jacob
+ * @24/05-2018
+ */
+public class EmployeeContainer extends BaseContainer<Employee>
+{
+   private static EmployeeContainer instance;
+
+   /**
+    * Constructor for objects of class EmployeeContainer
+    */
+   public EmployeeContainer()
+   {
+       
+   }
+
+   /**
+    * Method used to return the instance of the container.
+    * @return           Returns the instance of the container.
+    */
+   public static EmployeeContainer getInstance()
+   {
+        if(instance == null) 
+        instance = new EmployeeContainer();
+        return instance;
+   }
+   
+   /**
+    * Method used to find an employee using the employeeId as parameter.
+    * @param employeeId         The employeeId of the employee.
+    * @returns                  Returns the employee object found from the employeeId.
+    */
+   public Employee findEmployee(int employeeId)
+   {
+       return findEmployee(employeeId, null);
+   }
+   
+   /**
+    * Method used to find an employee using the mail of the employee as parameter.
+    * @param mail           The mail of the employee.
+    * @returns              Returns the employee object found from the mail.
+    */
+   public Employee findEmployee(String mail)
+   {
+       return findEmployee(0, mail);
+   }
+   
+   /**
+    * Method used to find an employee based on employeeId or mail in the container.
+    * @param employeeId         The employeeId of the employee.
+    * @param mail               The mail of the employee.
+    * @returns                  Returns the employee object found from either parameters.
+    */
+   private Employee findEmployee(int employeeId, String mail)
+    {
+        boolean found = false;
+        Employee employee = null;
+        Employee temp = null;
+        Iterator<Employee> it = getList().iterator();
+        
+        while(!found && it.hasNext())
+        {
+            temp = it.next();
+            if(temp.getEmployeeId() == employeeId || mail != null && temp.getMail().equalsIgnoreCase(mail))
+            {
+                found = true;
+                employee = temp;
+            }
+        }
+        return found ? employee: null;
+    }
+}

@@ -1,0 +1,82 @@
+package modellayer;
+import java.util.Date;
+
+/**
+ * Class Employee used to create employees.
+ *
+ * @author (Jacob)
+ * @version (24/05-2018)
+ */
+public class Employee extends Person
+{
+    private static int employeeCounter = 0;
+    private int employeeId;
+    private Date birthday;
+    private EmployeeRole role;
+    private boolean active;
+
+    /**
+     * Constructor for objects of class Employee
+     */
+    public Employee(String firstName, String lastName, String address, int postalCode, String city, String phoneNo, String mail, boolean active, EmployeeRole role, Date birthday)
+    {
+        super(firstName, lastName, address, postalCode, city, phoneNo, mail);
+        employeeCounter++;
+        employeeId = employeeCounter;
+        this.birthday = birthday;
+        this.role = role;
+        this.active = active;
+    }
+
+    /**
+     * Set methods.
+     */
+    public void setBirthday(Date newBirthday) { birthday = newBirthday; }
+    public void setRole(EmployeeRole newRole) { role = newRole; }
+    public void setActive(boolean newActive) { active = newActive; }
+    
+    /**
+     * Get methods.
+     */
+    public int getEmployeeId() { return employeeId; }
+    public Date getBirthday() { return birthday; }
+    public EmployeeRole getRole() { return role; }
+    public boolean getActive() { return active; }
+    
+    /**
+     * Method used to update all the information of an employee.
+     * @param firstName         The first name of the employee.
+     * @param lastName          The last name of the employee.
+     * @param address           The address of the employee.
+     * @param postalCode        The postal code of the employee.
+     * @param city              The city of the employee.
+     * @param phoneNo           The phone number of the employee.
+     * @param mail              The e-mail of the employee.
+     * @param active            This boolean is used to set the employee as active or inactive in the system.
+     * @param role              The role of the employee.
+     * @param birthday          The birthday of the employee.
+     * 
+     */
+    public void updateAll(String firstName, String lastName, String address, int postalCode, String city, String phoneNo, String mail, boolean active, EmployeeRole role, Date birthday)
+    {
+        setFirstName(firstName);
+        setLastName(lastName);
+        setAddress(address);
+        setPostalCode(postalCode);
+        setCity(city);
+        setPhoneNo(phoneNo);
+        setMail(mail);
+        setActive(active);
+        setRole(role);
+        setBirthday(birthday);
+    }
+    
+    /**
+     * Prints short list of information for employee.
+     * @return          Returns EmployeeId, FirstName and LastName of the employee.
+     */
+    public String toString()
+    {
+        return "[Id: " + employeeId + "] " + getFirstName() + " " + getLastName();
+    }
+}

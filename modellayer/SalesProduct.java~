@@ -1,0 +1,252 @@
+package modellayer;
+import java.util.*;
+
+/**
+ * Write a description of class SalesProduct here.
+ *
+ * @author (Mathias)
+ * @version (25-05-2018)
+ */
+
+/**
+ *Instance varibeles of our current class
+ */
+public class SalesProduct
+{
+
+    private static int salesProductCounter = 0;
+    private int salesProductId;
+    private String name;
+    private String location;
+    private int countInStock;
+    private int mininmumStock;
+    private int maximumStock;
+    private int reorderAmount;
+    private SalesProduct partOf;
+    private LinkedList<SalesProductPrice> prices;
+    private LinkedList<Discount> discounts;
+
+    /**
+     * Constructor for objects of class SalesProduct
+     */
+    public SalesProduct(String name , String location , int countInStock, int mininmumStock, int maximumStock, int reorderAmount)
+    {
+        salesProductCounter++;
+        salesProductId = salesProductCounter;
+        this.name = name;
+        this.location = location;
+        this.countInStock = countInStock;
+        this.mininmumStock = mininmumStock;
+        this.maximumStock = maximumStock;
+        this.reorderAmount = reorderAmount;
+        prices = new LinkedList<>();
+        discounts = new LinkedList<>();
+
+    }
+
+    /**
+     *Setters
+     */
+    public void setName(String name) { this.name = name; }  
+
+    public void setLocation(String location) { this.location = location;}
+
+    public void setCountInStock(int countInStock) { this.countInStock = countInStock;}  
+
+    public void setMinimumStock(int mininmumStock) { this.mininmumStock = mininmumStock;}   
+
+    public void setMaximumStock(int maximumStock) { this.maximumStock = maximumStock;}  
+
+    public void setReorderAmount(int reorderAmount) { this.reorderAmount = reorderAmount;}  
+
+    /**
+     *Getters
+     */
+
+    public int getSalesProductId() { return salesProductId; }
+
+    public String getName() { return name; }
+
+    public String getLocation() { return location; }
+
+    public int getCountInStock() { return countInStock; }
+
+    public int getMininmumStock() { return mininmumStock; }
+
+    public int getMaximumStock() { return maximumStock; }
+
+    public int getReorderAmount() { return reorderAmount; }
+
+    public SalesProduct getPartOf() { return partOf; }
+
+    /**
+     * @param timeFrom              The date that the price starts
+     * @param price                 The price the products needs       
+     * addPrice adds a price to our salesProductCounter
+     */
+    public void addPrice(Date timeFrom, double price)
+    {
+
+        SalesProductPrice newSalesProductPrice = new SalesProductPrice(timeFrom, price);
+
+        prices.add(newSalesProductPrice);
+
+    }
+
+    /**
+     * @param timeFrom              The date that the discount starts
+     * @param timeTo                The date that the discount ends
+     * @param percentage            The discount percentage that the product will be given
+     * addDiscount adds a newDiscount to our current SalesProduct
+     */
+
+    public void addDiscount(Date timeTo, Date timeFrom, double percentage) throws datesOverlapException
+    {
+
+        boolean overlaps = false;
+        Date startDate = null;
+        Date endDate = null;
+        int index = 0;
+        while(!overlaps && index < discounts.size())
+        {
+            startDate = discounts.get(index).getTimeFrom();
+            endDate = discounts.get(index).getTimeTo();
+            overlaps = doesDatesOverlapDiscount(timeTo, timeFrom, startDate, endDate);
+            index++;
+        }
+
+        if(overlaps)
+            throw new datesOverlapException();
+        else
+        {
+            Discount newDiscount = new Discount(timeTo, timeFrom, percentage);
+            discounts.add(newDiscount);
+        }
+
+    }
+
+    /**
+     * @param startDateDiscount        The start date for the discount trying to be created
+     * @param endDateDiscount          The end date for the discount trying to be created
+     * @param startDateGiven           The start date by a discount in the list
+     * @param endDateGiven             The end date by a discount in the list
+     * @return                         Returns a boolean to see if the dates are overlapping
+     * Method that checks if two dates in Discount are overlapping
+     */
+
+    public boolean doesDatesOverlapDiscount(Date startDateDiscount, Date endDateDisocunt, Date startDateGiven, Date endDateGiven){
+        return (startDateDiscount.after(startDateGiven) && startDateDiscount.before(endDateGiven)) || (endDateDisocunt.after(startDateGiven) && endDateDisocunt.before(endDateGiven));
+    }
+
+    /**
+     * @param date                     The date given to find the active price for that date
+     * @return                         Returns a double with the price
+     * getPrice gets the price that is closest to the date entered
+     */
+    public double getPrice(Date date)
+    {
+        long firstDate = 0;
+        long secondDate = 0;
+        double price = 0;
+        SalesProductPrice salesProductPrice = null;
+        for (int i = 0; i < prices.size(); i++) 
+        {
+            salesProductPrice = prices.get(i);
+            firstDate =  date.getTime() - salesProductPrice.getDate().getTime();
+            if(i == 0 || (firstDate < secondDate && firstDate >= 0)){
+
+                secondDate = firstDate;
+                price = salesProductPrice.getPrice();
+
+            }
+        }
+
+        return price;
+    }
+
+    /**
+     * @return                Returns a LinkedList with all SalesProductPrices for this product
+     * getAllSalesProductPrices gets all prices that have been on a SalesProduct
+     */
+
+    public LinkedList<SalesProductPrice> getAllSalesProductPrices()
+    {
+        return prices;
+    }
+
+    /**
+     * @param date            The date given to check if there was a discount in this period
+     * getDiscount gets the discount closest to the date of the SalesProduct
+     */
+
+    public Discount getDiscount(Date date)
+    {
+        int i = 0;
+        boolean found = false;
+        Discount discountObject = null;
+        Discount discount = null;
+        while(!found && i < discounts.size())
+        {
+            discount = discounts.get(i);
+            if(date.getTime() > discount.getTimeFrom().getTime() && date.getTime() < discount.getTimeTo().getTime()){
+                discountObject = discount;
+                found = true;
+            }
+            else
+                i++;
+        }
+
+        return discountObject;
+    }
+
+    /**
+     * @return              returns all discounts for this SalesProduct
+     * Finds all Discounts on a SalesProduct
+     */
+
+    public LinkedList<Discount getAllDiscounts()
+    {
+        return discounts;
+    }
+
+    /**
+     * @param name              The name needed for the product
+     * @param location          The current location of the product
+     * @param countInStock      The current amount in stock
+     * @param mininmumStock     The mininmum that should be in stock
+     * @param maximumStock      the maximum amount that can be in stock
+     * @param reorderAmount     At what amount a reorder of the product should happen
+     * @param partOf            The SalesProduct this SalesProduct can be a part of (can be null if not part of any)
+     * Updates every variable in our current SalesProduct
+     */
+
+    public void updateAll(String name , String location , int countInStock, int mininmumStock, int maximumStock, int reorderAmount, SalesProduct partOf)
+    {
+        this.name = name;
+        this.location = location;
+        this.countInStock = countInStock;
+        this.mininmumStock = mininmumStock;
+        this.maximumStock = maximumStock;
+        this.reorderAmount = reorderAmount;
+        this.partOf = partOf;
+
+    }
+    /**
+     * @return          Returns a string with the ID and name of the current SalesProduct
+     * toString sends the productID and name to the UI
+     */
+
+    public String toString()
+    {
+        return "[Id: " + salesProductId + "] "+ name ; 
+    }
+    public class datesOverlapException extends Exception
+    {
+        public datesOverlapException()
+        {
+            super("Din dato for oprettelsen af discount overlapper med et andet tilbud og oprettes derfor ikke");
+        }
+    }
+
+}
+
